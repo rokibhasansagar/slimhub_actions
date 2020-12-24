@@ -1,0 +1,10 @@
+name: 'GitHub Actions Cleaner'
+author: 'Rokib Hasan Sagar'
+description: 'Clean GitHub Actions Environment For Lightweight Build Purpose'
+runs:
+  using: "composite"
+  steps:
+    - run: $GITHUB_ACTION_PATH/cleanup.sh
+      name: 'Cleanup'
+      shell: bash
+
