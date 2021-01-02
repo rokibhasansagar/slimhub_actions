@@ -149,7 +149,10 @@ sudo -E apt-get -qq -y remove --purge \
 	zulu*
 
 sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d 2>/dev/null
-sudo rm -rf -- /opt/hostedtoolcache/* 2>/dev/null
+sudo rm -rf -- /opt/hostedtoolcache/* ~/.julia ~/miniconda 2>/dev/null
+
+printf "Removing Homebrew...\n"
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
 
 printf "Clearing Dangling Remains...\n"
 sudo -E apt-get -q -y clean && sudo -E apt-get -q -y autoremove
