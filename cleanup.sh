@@ -166,7 +166,7 @@ sudo rm -rf -- \
 	2>/dev/null
 
 printf "Clearing Dangling Remains...\n"
-sudo -E apt-get -q -y clean && sudo -E apt-get -q -y autoremove
+sudo -E apt-get -qq -y clean && sudo -E apt-get -qq -y autoremove
 
 printf "Disk Space After Cleanup...\n"
 df -hlT -t ext4
