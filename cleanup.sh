@@ -148,11 +148,22 @@ sudo -E apt-get -qq -y remove --purge \
 	vim-runtime \
 	zulu*
 
-sudo rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d 2>/dev/null
-sudo rm -rf -- /opt/hostedtoolcache/* ~/.julia ~/miniconda 2>/dev/null
-
 printf "Removing Homebrew...\n"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
+
+sudo rm -rf -- \
+	/usr/share/dotnet \
+	/etc/mysql \
+	/etc/php \
+	/etc/apt/sources.list.d \
+	2>/dev/null
+sudo rm -rf -- \
+	/opt/hostedtoolcache/* \
+	/usr/local/julia* \
+	/usr/local/lib/android \
+	/usr/local/lib/lein /usr/local/bin/lein \
+	/home/linuxbrew \
+	2>/dev/null
 
 printf "Clearing Dangling Remains...\n"
 sudo -E apt-get -q -y clean && sudo -E apt-get -q -y autoremove
