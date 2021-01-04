@@ -151,6 +151,10 @@ sudo -E apt-get -qq -y remove --purge \
 printf "Removing Homebrew...\n"
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)"
 
+sudo npm list -g --depth=0. | awk -F ' ' '{print $2}' | awk -F '@' '{print $1}' | sudo xargs npm remove -g 2>/dev/null
+sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n 2>/dev/null
+pip freeze --local | grep -v -i pipx | xargs sudo pip uninstall -y
+
 sudo rm -rf -- \
 	/usr/share/dotnet \
 	/etc/mysql \
@@ -161,7 +165,13 @@ sudo rm -rf -- \
 	/opt/hostedtoolcache/* \
 	/usr/local/julia* \
 	/usr/local/lib/android \
+	/usr/share/gradle* \
+	/usr/share/apache-maven* \
 	/usr/local/lib/lein /usr/local/bin/lein \
+	/usr/share/rust \
+	/usr/share/swift \
+	/usr/share/miniconda \
+	/usr/local/share/phantomjs* /usr/local/share/chrome_driver /usr/local/share/gecko_driver \
 	/home/linuxbrew \
 	2>/dev/null
 
