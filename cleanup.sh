@@ -7,7 +7,7 @@ printf "Disk Space Before Cleanup...\n"
 df -hlT -t ext4
 
 printf "Clearing Docker Image Caches...\n"
-docker rmi -f `docker images -q` > /dev/null
+docker rmi -f `docker images -q` &>/dev/null
 
 printf "Uninstalling Unnecessary Applications...\n"
 sudo -E apt-get -qq -y remove --purge \
@@ -146,21 +146,21 @@ sudo -E apt-get -qq -y remove --purge \
 	ubuntu-mono \
 	vim \
 	vim-runtime \
-	zulu* > /dev/null
+	zulu* &>/dev/null
 
 printf "Removing Homebrew...\n"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)" > /dev/null
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)" &>/dev/null
 
-sudo npm list -g --depth=0. | awk -F ' ' '{print $2}' | awk -F '@' '{print $1}' | sudo xargs npm remove -g > /dev/null
-sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n > /dev/null
-pip freeze --local | grep -v -i pipx | xargs sudo pip uninstall -y > /dev/null
+sudo npm list -g --depth=0. | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
+sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
+pip freeze --local | grep -v -i pipx | xargs sudo pip uninstall -y &>/dev/null
 
 sudo rm -rf -- \
 	/usr/share/dotnet \
 	/etc/mysql \
 	/etc/php \
 	/etc/apt/sources.list.d \
-	> /dev/null
+	&>/dev/null
 sudo rm -rf -- \
 	/opt/hostedtoolcache/* \
 	/usr/local/julia* \
@@ -173,10 +173,10 @@ sudo rm -rf -- \
 	/usr/share/miniconda \
 	/usr/local/share/phantomjs* /usr/local/share/chrome_driver /usr/local/share/gecko_driver \
 	/home/linuxbrew \
-	> /dev/null
+	&>/dev/null
 
 printf "Clearing Dangling Remains...\n"
-sudo -E apt-get -qq -y clean && sudo -E apt-get -qq -y autoremove > /dev/null
+sudo -E apt-get -qq -y clean &>/dev/null && sudo -E apt-get -qq -y autoremove &>/dev/null
 
 printf "Disk Space After Cleanup...\n"
 df -hlT -t ext4
