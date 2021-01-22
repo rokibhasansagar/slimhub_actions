@@ -149,7 +149,7 @@ sudo -E apt-get -qq -y remove --purge \
 	zulu* &>/dev/null
 
 printf "Removing Homebrew...\n"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)" &>/dev/null
+echo y | /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)" &>/dev/null
 
 sudo npm list -g --depth=0. | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
 sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
