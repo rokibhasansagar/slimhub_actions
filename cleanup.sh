@@ -159,11 +159,14 @@ curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh 
 
 sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
 sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
-pip freeze --local | grep -v -i pipx | xargs sudo pip uninstall -y &>/dev/null
+pipx uninstall-all &>/dev/null
+pip freeze --local | xargs sudo pip uninstall -y &>/dev/null
 
 sudo rm -rf -- \
+	/usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli \
 	/usr/share/az_* \
 	/usr/share/dotnet \
+	/usr/local/graalvm \
 	/etc/mysql \
 	/etc/php \
 	/etc/apt/sources.list.d \
@@ -173,15 +176,23 @@ sudo rm -rf -- \
 	/usr/share/gradle* \
 	/usr/share/apache-maven* \
 	/usr/local/lib/lein /usr/local/bin/lein \
-	/usr/share/rust \
+	/usr/share/rust /home/runner/.cargo /home/runner/.rustup \
 	/usr/share/swift \
 	/usr/share/miniconda \
 	/usr/local/share/phantomjs* /usr/local/share/chrome_driver /usr/local/share/gecko_driver \
 	/home/linuxbrew \
+	/usr/share/man \
 	&>/dev/null
 
 printf "Clearing Dangling Remains...\n"
-sudo -E apt-get -qq -y clean &>/dev/null && sudo -E apt-get -qq -y autoremove &>/dev/null
+sudo -E apt-get -qq -y clean &>/dev/null
+sudo -E apt-get -qq -y autoremove &>/dev/null
+sudo rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* &>/dev/null
+
+export PATH="/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+sed -i '/.dotnet/d' ~/.bashrc &>/dev/null
+sed -i '/.config\/composer/d' ~/.bashrc &>/dev/null
+. ~/.bashrc &>/dev/null
 
 printf "Disk Space After Cleanup...\n"
 df -hlT -t ext4
