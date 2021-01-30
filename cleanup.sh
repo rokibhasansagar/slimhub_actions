@@ -161,10 +161,12 @@ sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-
 sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
 pipx uninstall-all &>/dev/null
 pip freeze --local | xargs sudo pip uninstall -y &>/dev/null
+find /usr/share /usr/lib /snap ~/.local/lib -depth -type d -name __pycache__ -exec rm -rf '{}' + 2>/dev/null; &>/dev/null
 
 sudo rm -rf -- \
 	/usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli \
 	/usr/share/az_* \
+	/opt/az \
 	/usr/share/dotnet \
 	/usr/local/graalvm \
 	/etc/mysql \
