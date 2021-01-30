@@ -7,10 +7,10 @@ printf "Disk Space Before Cleanup...\n"
 df -hlT -t ext4
 
 printf "Clearing Docker Image Caches...\n"
-docker rmi -f `docker images -q` &>/dev/null
+docker rmi -f $(docker images -q) &>/dev/null
 
 printf "Uninstalling Unnecessary Applications...\n"
-sudo -E apt-get -qq -y remove --purge \
+sudo -E apt-get -qq -y purge \
 	adoptopenjdk-11-hotspot \
 	adoptopenjdk-8-hotspot \
 	adwaita-icon-theme \
@@ -24,6 +24,7 @@ sudo -E apt-get -qq -y remove --purge \
 	buildah \
 	byobu \
 	cabal-* \
+	chromium-browser \
 	clang-8 \
 	clang-9 \
 	clang-format-8 \
@@ -46,6 +47,7 @@ sudo -E apt-get -qq -y remove --purge \
 	gcc-7 \
 	gcc-8 \
 	gfortran* \
+	gh \
 	ghc* \
 	gnome-accessibility-themes \
 	gnome-contacts \
@@ -146,22 +148,25 @@ sudo -E apt-get -qq -y remove --purge \
 	ubuntu-mono \
 	vim \
 	vim-runtime \
+	xvfb \
+	yarn \
 	zulu* &>/dev/null
+sudo -E apt-get -qq -y autoremove &>/dev/null
 
 printf "Removing Homebrew...\n"
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh)" &>/dev/null
+curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh && chmod a+x uninstall-brew.sh
+./uninstall-brew.sh -f -q &>/dev/null
 
-sudo npm list -g --depth=0. | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
+sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
 sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
 pip freeze --local | grep -v -i pipx | xargs sudo pip uninstall -y &>/dev/null
 
 sudo rm -rf -- \
+	/usr/share/az_* \
 	/usr/share/dotnet \
 	/etc/mysql \
 	/etc/php \
 	/etc/apt/sources.list.d \
-	&>/dev/null
-sudo rm -rf -- \
 	/opt/hostedtoolcache/* \
 	/usr/local/julia* \
 	/usr/local/lib/android \
