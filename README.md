@@ -9,7 +9,7 @@ When you don't really need any extra software rather than core functions of Ubun
 Github Actions give you a 84GB storage drive which is loaded up to 56GB with lots of programs inbuilt.
 That gives you only 29GB playground.
 
-But with this action, you can gain up to 76GB! That means around 47GB can be freed!
+But with this action, you can gain up to 77GB! That means around 48GB can be freed!
 >More space can be gained. Work is undergoing to achieve that.
 
 ## *Requirement*
@@ -39,15 +39,15 @@ steps:
 The main programs removed by this action are -
 ```text
 - adoptopenjdk-11 & adoptopenjdk-8
-- android-sdk
+- android-sdk and ndk
 - ant, apache-maven, gradle, hhvm, julia, lein
 - swift, miniconda
-- azure-cli, vim
+- azure-cli, aws-cli, vim
 - buildah, ghc
 - cabal*
 - clang-9,clang-8, llvm-8 & lld-8
 - Docker Image Caches
-- dotnet, powershell
+- dotnet, graalvm, powershell
 - erlang, php*, ruby, rake, rust & swig
 - gcc-7, g++-7, cpp-7
 - gcc-8, g++-8, cpp-8
@@ -64,7 +64,7 @@ The main programs removed by this action are -
 - mono*
 - mercurial, subversion
 - node_modules
-- phantomjs, chrome_driver, gecko_driver
+- phantomjs, chrome_driver, gecko_driver, xvfb
 - python2 & pip local packages
 - podman
 ```

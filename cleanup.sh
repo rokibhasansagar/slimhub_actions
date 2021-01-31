@@ -156,13 +156,16 @@ sudo -E apt-get -qq -y autoremove &>/dev/null
 printf "Removing Homebrew...\n"
 curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh && chmod a+x uninstall-brew.sh
 ./uninstall-brew.sh -f -q &>/dev/null
+rm -f ./uninstall-brew.sh &>/dev/null
 
+printf "Removing NodeJS, NPM & NPX, PIPX & PIP packages...\n"
 sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
 sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
 pipx uninstall-all &>/dev/null
 pip freeze --local | xargs sudo pip uninstall -y &>/dev/null
 find /usr/share /usr/lib /snap ~/.local/lib -depth -type d -name __pycache__ -exec rm -rf '{}' + 2>/dev/null; &>/dev/null
 
+printf "Removing Lots of Cached Programs & Unneeded Folders...\n"
 sudo rm -rf -- \
 	/usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli \
 	/usr/share/az_* \
@@ -171,7 +174,7 @@ sudo rm -rf -- \
 	/usr/local/graalvm \
 	/etc/mysql \
 	/etc/php \
-	/etc/apt/sources.list.d \
+	/etc/apt/sources.list.d/* \
 	/opt/hostedtoolcache/* \
 	/usr/local/julia* \
 	/usr/local/lib/android \
@@ -186,7 +189,7 @@ sudo rm -rf -- \
 	/usr/share/man \
 	&>/dev/null
 
-printf "Clearing Dangling Remains...\n"
+printf "Clearing Dangling Remains of Applications...\n"
 sudo -E apt-get -qq -y clean &>/dev/null
 sudo -E apt-get -qq -y autoremove &>/dev/null
 sudo rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* &>/dev/null
