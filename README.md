@@ -1,26 +1,32 @@
-# *rokibhasansagar/slimhub_actions@main*
-![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/rokibhasansagar/slimhub_actions?label=Latest%20Tag)
+# *rokibhasansagar/slimhub_actions@mac*
 
 ### *GitHub Actions Cleaner*
 
 A simple composite run steps action to clean the GitHub Actions environment to bare minimum.
-When you don't really need any extra software rather than core functions of Ubuntu itself, you would want to use this.
+When you don't really need any extra software rather than core functions of the machine itself, you would want to use this.
 
-Github Actions give you a 84GB storage drive which is loaded up to 56GB with lots of programs inbuilt.
-That gives you only 29GB playground.
+Github Actions for MacOS gives you about 90GB playground space with 380GB massive drive which is almost loaded up with so many applications.
 
-But with this action, you can gain up to 77GB! That means around 48GB can be freed!
+But with this action, you can gain up to 270GB+ playground space! Can you beleive it!
 >More space can be gained. Work is undergoing to achieve that.
+
+## *CAUTION*
+
+This `mac` branch is for test purpose only. When it becomes stable, it will be merged into `main` branch so that you can access it in MacOS as-well-as Ubuntu with just `rokibhasansagar/slimhub_actions@main`.
 
 ## *Requirement*
 
-Nothing really, just your Actions Runner needs to be run on **ubuntu-20.04**.
+Nothing really, just your Actions Runner needs to be run on **macos-latest**.
 ```yaml
+# You might want to set the default shell as bash on top of jobs' definitions
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: macos-latest
 ```
-Bionic support will be added later.
 
 ## *How To Use*
 
@@ -29,45 +35,15 @@ steps:
   # ...
   # You might want to Checkout your repo first, but not necessary.
   # Cleanup The Actions Workspace Using Custom Composite Run Actions
-  - uses: rokibhasansagar/slimhub_actions@main
+  - uses: rokibhasansagar/slimhub_actions@mac
   # That's it! Now use your normal steps
   # ...
 ```
 
 ## *Things Removed*
 
-The main programs removed by this action are -
-```text
-- adoptopenjdk-11 & adoptopenjdk-8
-- android-sdk and ndk
-- ant, apache-maven, gradle, hhvm, julia, lein
-- swift, miniconda
-- azure-cli, aws-cli, vim
-- buildah, ghc
-- cabal*
-- clang-9,clang-8, llvm-8 & lld-8
-- Docker Image Caches
-- dotnet, graalvm, powershell
-- erlang, php*, ruby, rake, rust & swig
-- gcc-7, g++-7, cpp-7
-- gcc-8, g++-8, cpp-8
-- groff-base
-- firefox
-- google*
-- Homebrew
-- hostedtoolcache preconfigured packages
-- heroku
-- imagemagick*
-- libreoffice*
-- man-db & manpages
-- mongodb, mysql & postgresql
-- mono*
-- mercurial, subversion
-- node_modules
-- phantomjs, chrome_driver, gecko_driver, xvfb
-- python2 & pip local packages
-- podman
-```
+>TODO: Need to add descriptions. Meanwhile, read the [cleanup script](cleanup.sh) file to see what are removed. 
+
 *Yet, More To Remove In The Future*
 
 ## *Inspired By*

@@ -1,203 +1,48 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-# Make Sure The Environment Is Non-Interactive
-export DEBIAN_FRONTEND=noninteractive
+if [[ $OSTYPE != "darwin"* ]]; then
+	printf "This script is only for MacOS.\n"
+	exit 1
+fi
 
-printf "Disk Space Before Cleanup...\n"
-df -hlT -t ext4
+echo "::group::Initial Disk Space"
+df -h
+echo "::endgroup::"
 
-printf "Clearing Docker Image Caches...\n"
-docker rmi -f $(docker images -q) &>/dev/null
+echo "::group::GNU Tools Installation"
+brew update &>/dev/null
+brew install -f coreutils binutils gawk gnu-sed grep bash
+echo 'export PATH="/usr/local/opt/coreutils/libexec/gnubin:$PATH"' >> ~/.bashrc
+echo 'export PATH="/usr/local/opt/binutils/bin:$PATH"' >> ~/.bash_profile
+echo 'export PATH="/usr/local/opt/gnu-sed/libexec/gnubin:$PATH"' >> ~/.bashrc
+echo 'export PATH="/usr/local/opt/grep/libexec/gnubin:$PATH"' >> ~/.bashrc
+. ~/.bashrc &>/dev/null || true
+echo "::endgroup::"
 
-printf "Uninstalling Unnecessary Applications...\n"
-sudo -E apt-get -qq -y purge \
-	adoptopenjdk-11-hotspot \
-	adoptopenjdk-8-hotspot \
-	adwaita-icon-theme \
-	aisleriot \
-	alsa-* \
-	ant \
-	ant-optional \
-	azure-cli \
-	bazel* \
-	brltty \
-	buildah \
-	byobu \
-	cabal-* \
-	chromium-browser \
-	clang-8 \
-	clang-9 \
-	clang-format-8 \
-	clang-format-9 \
-	cpp-7 \
-	cpp-8 \
-	dotnet* \
-	duplicity \
-	empathy \
-	empathy-common \
-	erlang* \
-	esl-erlang \
-	example-content \
-	firebird* \
-	firefox \
-	fontconfig* \
-	fonts-* \
-	g++-7 \
-	g++-8 \
-	gcc-7 \
-	gcc-8 \
-	gfortran* \
-	gh \
-	ghc* \
-	gnome-accessibility-themes \
-	gnome-contacts \
-	gnome-mahjongg \
-	gnome-mines \
-	gnome-orca \
-	gnome-screensaver \
-	gnome-sudoku \
-	gnome-video-effects \
-	google* \
-	groff-base \
-	gsfonts \
-	gtk-update-icon-cache \
-	heroku \
-	hhvm \
-	hicolor-icon-theme \
-	htop \
-	humanity-icon-theme \
-	imagemagick* \
-	info \
-	install-info \
-	irqbalance \
-	landscape-common \
-	libclang1-8 \
-	libclang-common-8-dev \
-	libmono-* \
-	libpython2* \
-	libreoffice-avmedia-backend-gstreamer \
-	libreoffice-base-core \
-	libreoffice-calc \
-	libreoffice-common \
-	libreoffice-core \
-	libreoffice-draw \
-	libreoffice-gnome \
-	libreoffice-gtk \
-	libreoffice-impress \
-	libreoffice-math \
-	libreoffice-ogltrans \
-	libreoffice-pdfimport \
-	libreoffice-style-galaxy \
-	libreoffice-style-human \
-	libreoffice-writer \
-	libsane \
-	libsane-common \
-	lld-8 \
-	llvm-8* \
-	man-db \
-	manpages \
-	mercurial \
-	mercurial-common \
-	mongodb-* \
-	mono* \
-	msodbcsql* \
-	mssql-tools \
-	mysql* \
-	odbcinst* \
-	openjdk* \
-	php* \
-	plymouth \
-	plymouth-theme-ubuntu-text \
-	podman \
-	podman-plugins \
-	poppler-data \
-	popularity-contest \
-	postgresql* \
-	powershell \
-	printer-driver-brlaser \
-	printer-driver-foo2zjs \
-	printer-driver-foo2zjs-common \
-	printer-driver-m2300w \
-	printer-driver-ptouch \
-	printer-driver-splix \
-	python2 \
-	python2-minimal \
-	python3-uno \
-	rake \
-	r-base-* \
-	r-cran-* \
-	rhythmbox \
-	rhythmbox-plugins \
-	rhythmbox-plugin-zeitgeist \
-	r-recommended \
-	ruby* \
-	sane-utils \
-	shotwell \
-	shotwell-common \
-	sound-theme-freedesktop \
-	subversion \
-	swig* \
-	telepathy-gabble \
-	telepathy-idle \
-	telepathy-indicator \
-	telepathy-logger \
-	telepathy-mission-control-5 \
-	totem \
-	totem-common \
-	totem-plugins \
-	ubuntu-mono \
-	vim \
-	vim-runtime \
-	xvfb \
-	yarn \
-	zulu* &>/dev/null
-sudo -E apt-get -qq -y autoremove &>/dev/null
+echo "::group::Brew Cleanups"
+brew uninstall -f --cask adoptopenjdk14 adoptopenjdk13 adoptopenjdk11 adoptopenjdk8 chromedriver firefox google-chrome julia microsoft-auto-update microsoft-edge session-manager-plugin 2>/dev/null
+brew uninstall -f --formula aliyun-cli ant aspell aws-sam-cli azure-cli bazelisk carthage composer fontconfig freetds freetype gcc@8 gd geckodriver gh gradle helm hub jpeg libpq libtiff llvm maven mongodb-community mongodb-database-tools node@14 openjdk php pipx postgresql python@3.8 rustup-init selenium-server-standalone subversion tidy-html5 unixodbc webp 2>/dev/null
+brew cleanup -s && rm -rf $(brew --cache)
+echo "::endgroup::"
 
-printf "Removing Homebrew...\n"
-curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh && chmod a+x uninstall-brew.sh
-./uninstall-brew.sh -f -q &>/dev/null
-rm -f ./uninstall-brew.sh &>/dev/null
+echo "::group::Xcode and Visual Studio Cleanups"
+cd /Applications
+for i in Xcode_10*.app Xcode_11*.app; do sudo rm -rf $i 2>/dev/null; done
+USED_XCODE=$(ls -lAog Xcode.app | awk -F'/' '{print $NF}')
+for i in Xcode_12*.app; do if [ $i != "$USED_XCODE" ]; then rm -rf $i &>/dev/null; fi; done
+printf "Removing Visual Studio...\n"
+sudo rm -rf Visual* &>/dev/null
+cd -
+echo "::endgroup::"
 
-printf "Removing NodeJS, NPM & NPX, PIPX & PIP packages...\n"
-sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | sudo xargs npm remove -g &>/dev/null
-sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n &>/dev/null
-pipx uninstall-all &>/dev/null
-pip freeze --local | xargs sudo pip uninstall -y &>/dev/null
-find /usr/share /usr/lib /snap ~/.local/lib -depth -type d -name __pycache__ -exec rm -rf '{}' + 2>/dev/null; &>/dev/null
+echo "::group::Purge Cached Programs"
+sudo rm -rf ~/hostedtoolcache/ 2>/dev/null
+echo "::endgroup::"
 
-printf "Removing Lots of Cached Programs & Unneeded Folders...\n"
-sudo rm -rf -- \
-	/usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli \
-	/usr/share/az_* \
-	/opt/az \
-	/usr/share/dotnet \
-	/usr/local/graalvm \
-	/etc/mysql \
-	/etc/php \
-	/etc/apt/sources.list.d/* \
-	/opt/hostedtoolcache/* \
-	/usr/local/julia* \
-	/usr/local/lib/android \
-	/usr/share/gradle* \
-	/usr/share/apache-maven* \
-	/usr/local/lib/lein /usr/local/bin/lein \
-	/usr/share/rust /home/runner/.cargo /home/runner/.rustup \
-	/usr/share/swift \
-	/usr/share/miniconda \
-	/usr/local/share/phantomjs* /usr/local/share/chrome_driver /usr/local/share/gecko_driver \
-	/home/linuxbrew \
-	/usr/share/man \
-	&>/dev/null
+echo "::group::Purge Android SDK, NDK, Emulators and etc."
+rm -rf ~/Library/Android 2>/dev/null
+echo "::endgroup::"
 
-printf "Clearing Dangling Remains of Applications...\n"
-sudo -E apt-get -qq -y clean &>/dev/null
-sudo -E apt-get -qq -y autoremove &>/dev/null
-sudo rm -rf -- /var/lib/apt/lists/* /var/cache/apt/archives/* &>/dev/null
-
-export PATH="/snap/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-sed -i '/.dotnet/d' ~/.bashrc &>/dev/null
-sed -i '/.config\/composer/d' ~/.bashrc &>/dev/null
-. ~/.bashrc &>/dev/null
-
-printf "Disk Space After Cleanup...\n"
-df -hlT -t ext4
+echo "::group::Disk Space After Cleanups"
+df -h
+echo "::endgroup::"
