@@ -1,7 +1,8 @@
 # *rokibhasansagar/slimhub_actions@main*
-![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/rokibhasansagar/slimhub_actions?label=Latest%20Tag&?cacheSeconds=600)
 
-### *GitHub Actions Cleaner*
+![GitHub tag (latest by date)](https://img.shields.io/github/v/tag/rokibhasansagar/slimhub_actions?label=Latest%20Tag&?cacheSeconds=300)
+
+## *GitHub Actions Cleaner*
 
 A simple composite run steps action to clean the GitHub Actions environment to bare minimum.
 When you don't really need any extra software rather than core functions of Ubuntu itself, you would want to use this.
@@ -12,63 +13,30 @@ That gives you only 22GB playground.
 But with this action, you can gain up to 78GB! That means around 56GB can be freed!
 >More space can be gained. Work is undergoing to achieve that.
 
-## *Requirement*
-
-Nothing really, just your Actions Runner needs to be run on **ubuntu-20.04**.
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-20.04
-```
-Bionic support will be added later.
-
 ## *How To Use*
 
+Your Workflow must run on Ubuntu Runners, bionic or focal.
+
 ```yaml
-steps:
-  # ...
-  # You might want to Checkout your repo first, but not necessary.
-  # Cleanup The Actions Workspace Using Custom Composite Run Actions
-  - uses: rokibhasansagar/slimhub_actions@main
-  # That's it! Now use your normal steps
-  # ...
+# ...
+jobs:
+  slim_build:
+    runs-on: ubuntu-latest
+    # You can use either of the ubuntu-18.04 or ubuntu-20.04 runner
+    steps:
+      # You might want to Checkout your repo first, but not mandatory
+      - uses: actions/checkout@v2
+      # Cleanup The Actions Workspace Using Custom Composite Run Actions
+      - uses: rokibhasansagar/slimhub_actions@main
+      # That's it! Now use your normal steps
+      # ...
 ```
 
-## *Things Removed*
+### *What Are Removed*
 
-The main programs removed by this action are -
-```text
-- adoptopenjdk-11 & adoptopenjdk-8
-- android-sdk and ndk
-- ant, apache-maven, gradle, hhvm, julia, lein
-- swift, miniconda
-- azure-cli, aws-cli, vim
-- buildah, ghc
-- cabal*
-- clang-9,clang-8, llvm-8 & lld-8
-- Docker Image Caches
-- dotnet, graalvm, powershell
-- erlang, php*, ruby, rake, rust & swig
-- gcc-7, g++-7, cpp-7
-- gcc-8, g++-8, cpp-8
-- groff-base
-- firefox
-- google*
-- Homebrew
-- hostedtoolcache preconfigured packages
-- heroku
-- imagemagick*
-- libreoffice*
-- man-db & manpages
-- mongodb, mysql & postgresql
-- mono*
-- mercurial, subversion
-- node_modules
-- phantomjs, chrome_driver, gecko_driver, xvfb
-- python2 & pip local packages
-- podman
-```
-*Yet, More To Remove In The Future*
+See the [script](cleanup.sh) itself to know what exactly are stripped.
+
+Don't cry if any further steps using other Actions or scripts fail due to *command not found*. You have to manually install every prerequisite programs which would seem to be unavailable to run your particular script(s).
 
 ## *Inspired By*
 

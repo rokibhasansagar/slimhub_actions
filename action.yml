@@ -7,4 +7,6 @@ runs:
     - run: $GITHUB_ACTION_PATH/cleanup.sh
       name: 'Cleanup'
       shell: bash
-
+branding:
+  icon: 'layers'
+  color: 'blue'
