@@ -42,3 +42,7 @@ Don't cry if any further steps using other Actions or scripts fail due to *comma
 
 - [@Area69Lab - Alien technology ahead](https://github.com/Area69Lab)
 - [@ElytrA8 Shéikh Adnan](https://github.com/ElytrA8)
+
+## License
+
+The script and documentation in this project are released under the [MIT License](LICENSE)
