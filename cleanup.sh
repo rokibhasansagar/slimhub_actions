@@ -7,14 +7,14 @@ fi
 
 # Prepare
 while ((${SECONDS_LEFT:=5} > 0)); do
-	printf "Please wait %ss ...\n" "${SECONDS_LEFT}"
+	printf "Please wait %.fs ...\n" "${SECONDS_LEFT}"
 	sleep 1
 	SECONDS_LEFT=$((SECONDS_LEFT - 1))
 done
 unset SECONDS_LEFT
 
 echo "::group::Initial Disk Space"
-df -H
+sudo df -H
 echo "::endgroup::"
 
 echo "::group::GNU Tools Installation"
@@ -29,8 +29,7 @@ echo "::endgroup::"
 
 echo "::group::Brew Cleanups"
 brew uninstall --force --zap --cask adoptopenjdk14 adoptopenjdk13 adoptopenjdk12 adoptopenjdk11 adoptopenjdk8 chromedriver firefox google-chrome julia microsoft-auto-update microsoft-edge r session-manager-plugin soundflower 2>/dev/null
-brew uninstall --force --zap --formula aliyun-cli ant aspell aws-sam-cli azure-cli bazelisk carthage composer fontconfig freetds freetype gcc@8 gd geckodriver gh gradle helm httpd hub jpeg libpq libtiff llvm maven mongodb-community mongodb-database-tools nginx node@14 openjdk packer php pipx postgresql python@3.8 rustup-init selenium-server-standalone subversion tidy-html5 unixodbc webp 2>/dev/null
-brew uninstall --force --zap switchaudio-osx sox go ruby@2.7 2>/dev/null
+brew uninstall --force --zap aliyun-cli ant aspell aws-sam-cli azure-cli bazelisk carthage composer fontconfig freetds freetype gcc@8 gd geckodriver gh gradle helm httpd hub jpeg libpq libtiff llvm maven mongodb-community mongodb-database-tools nginx node@14 openjdk packer php pipx postgresql python@3.8 rustup-init selenium-server-standalone subversion tidy-html5 unixodbc webp switchaudio-osx sox go ruby@2.7 2>/dev/null
 brew cleanup -s && rm -rf $(brew --cache)
 echo "::endgroup::"
 
@@ -74,5 +73,5 @@ sudo rm -rf /usr/local/bin/azcopy /usr/local/share/edge_driver /usr/local/bin/ms
 echo "::endgroup::"
 
 echo "::group::Disk Space After Cleanups"
-df -H
+sudo df -H
 echo "::endgroup::"
