@@ -1,4 +1,4 @@
-#!/bin/bash -e -o pipefail
+#!/bin/bash
 
 if [[ $OSTYPE != "darwin"* ]]; then
 	printf "This script is only for MacOS.\n"
