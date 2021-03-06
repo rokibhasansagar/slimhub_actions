@@ -75,3 +75,5 @@ echo "::endgroup::"
 echo "::group::Disk Space After Cleanups"
 sudo df -H
 echo "::endgroup::"
+
+exit 0
