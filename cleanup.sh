@@ -17,7 +17,7 @@ done
 unset SECONDS_LEFT
 
 echo "::group::Disk Space Before Cleanup"
-df -hlT -t ext4
+df -hlT /
 echo "::endgroup::"
 
 echo "::group::Clearing Docker Image Caches"
@@ -35,7 +35,7 @@ fi
 unset REL
 sudo -EH apt-get -qq -y purge \
 	${APT_Pac4Purge} \
-	adoptopenjdk-* openjdk* ant* sbt \
+	adoptopenjdk-* openjdk* ant* \
 	*-icon-theme plymouth *-theme* fonts-* gsfonts gtk-update-icon-cache \
 	ansible google-cloud-sdk heroku \
 	apache2* nginx msodbcsql* mssql-tools mysql* libmysqlclient* unixodbc-dev postgresql* libpq-dev odbcinst* mongodb-* sphinxsearch \
@@ -105,17 +105,17 @@ echo "::group::Removing Lots of Cached Programs & Unneeded Folders"
 		/usr/local/bin/session-manager-plugin
 	printf "Removing Julia, Rust, Cargo, Rubugems, Rake, Swift, Haskell, Erlang...\n"
 	sudo rm -rf -- /usr/local/julia* /usr/bin/julia \
-		/usr/share/rust /home/runner/.cargo /home/runner/.rustup \
+		/usr/share/rust /home/runner/.cargo /home/runner/.rustup /home/runner/.ghcup \
 		/usr/local/bin/rake /usr/local/bin/rdoc /usr/local/bin/ri /usr/local/bin/racc /usr/local/bin/rougify \
 		/usr/local/bin/bundle /usr/local/bin/bundler /var/lib/gems \
 		/usr/share/swift /usr/local/bin/swift /usr/local/bin/swiftc \
 		/usr/bin/ghc /usr/local/.ghcup /usr/local/bin/stack \
-		/usr/local/bin/rebar3 \
+		/usr/local/bin/rebar3 /usr/share/sbt /usr/bin/sbt \
 		/usr/bin/go /usr/bin/gofmt
 	printf "Removing Various Cloud CLI Tools...\n"
 	sudo rm -rf -- /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws \
 		/usr/local/bin/aliyun /usr/share/az_* /opt/az /usr/bin/az \
-		/usr/local/bin/azcopy10 /usr/bin/azcopy /usr/lib/azcopy \
+		/usr/local/bin/azcopy* /usr/bin/azcopy /usr/lib/azcopy \
 		/usr/local/bin/oc /usr/local/bin/oras \
 		/usr/local/bin/README.md
 	printf "Removing Different Kubernetes & Container Management Programs...\n"
@@ -144,5 +144,7 @@ echo "::group::Clearing Unwanted Environment Variables"
 echo "::endgroup::"
 
 echo "::group::Disk Space After Cleanup"
-df -hlT -t ext4
+df -hlT /
 echo "::endgroup::"
+
+exit
