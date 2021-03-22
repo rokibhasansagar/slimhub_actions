@@ -62,8 +62,8 @@ echo "::endgroup::"
 
 echo "::group::Removing Homebrew Completely"
 curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh && chmod a+x uninstall-brew.sh
-./uninstall-brew.sh -f -q 2>/dev/null
-sudo rm -rf -- ./uninstall-brew.sh /home/linuxbrew 2>/dev/null
+./uninstall-brew.sh -f -q &>/dev/null
+sudo rm -rf -- ./uninstall-brew.sh /home/linuxbrew &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Removing NodeJS, NPM & NPX"
@@ -72,7 +72,7 @@ echo "::group::Removing NodeJS, NPM & NPX"
 	yes | sudo n uninstall
 	sudo rm -rf -- /usr/local/lib/node_modules /usr/local/n /usr/local/bin/n \
 		/usr/local/bin/vercel /usr/local/bin/now
-} 2>/dev/null
+} &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Purging PIPX & PIP packages"
@@ -80,7 +80,7 @@ echo "::group::Purging PIPX & PIP packages"
 	pipx uninstall-all && sudo pip3 uninstall -q -y pipx
 	find /usr/share /usr/lib ~/.local/lib -depth -type d -name __pycache__ \
 		-exec rm -rf '{}' + 2>/dev/null;
-} 2>/dev/null
+} &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Removing Lots of Cached Programs & Unneeded Folders"
@@ -140,7 +140,7 @@ echo "::group::Clearing Unwanted Environment Variables"
 	sudo sed -i '1i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' /etc/environment
 	sed -i '/HOME\/\.local\/bin/d' /home/runner/.bashrc
 	source /home/runner/.bashrc
-} 2>/dev/null
+} &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Disk Space After Cleanup"
