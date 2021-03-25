@@ -28,16 +28,16 @@ echo "::group::Uninstalling Unnecessary Applications"
 sudo -EH apt-get -qq -y update &>/dev/null
 REL=$(grep "UBUNTU_CODENAME" /etc/os-release | cut -d'=' -f2)
 if [[ ${REL} == "focal" ]]; then
-	APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2 python2-minimal libpython-dev clang-9 clang-format-9"
+	APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2 python2-minimal libpython-dev clang-9 clang-format-9 llvm-10-dev llvm-10-runtime llvm-10-tools llvm-10 lld-10 lld-9 libllvm10 libllvm9 libclang-common-10-dev libclang-cpp10 libclang1-10 clang-10 clang-format-10"
 elif [[ ${REL} == "bionic" ]]; then
-	APT_Pac4Purge="clang-6.0 clang-format-6.0 llvm-6.0-dev lld-6.0"
+	APT_Pac4Purge="clang-6.0 clang-format-6.0 libclang-common-6.0-dev libclang1-6.0 liblldb-6.0 libllvm6.0 llvm-6.0-dev lld-6.0"
 fi
 unset REL
 sudo -EH apt-get -qq -y purge \
 	${APT_Pac4Purge} \
 	adoptopenjdk-* openjdk* ant* \
 	*-icon-theme plymouth *-theme* fonts-* gsfonts gtk-update-icon-cache \
-	ansible google-cloud-sdk heroku \
+	google-cloud-sdk heroku \
 	apache2* nginx msodbcsql* mssql-tools mysql* libmysqlclient* unixodbc-dev postgresql* libpq-dev odbcinst* mongodb-* sphinxsearch \
 	apport* popularity-contest \
 	aspnetcore-* dotnet* \
@@ -46,12 +46,12 @@ sudo -EH apt-get -qq -y purge \
 	brltty byobu htop \
 	buildah hhvm kubectl packagekit* podman podman-plugins skopeo \
 	chromium-browser firebird* firefox google-chrome* xvfb \
-	clang-8 clang-format-8 cpp-7 cpp-8 lld-8 llvm-8* \
+	clang-8 clang-format-8 libclang-common-8-dev libclang1-8 cpp-7 cpp-8 lld-8 llvm-8* libllvm8 liblldb-8 \
 	esl-erlang ghc-* groff-base rake r-base* r-cran-* r-recommended ruby* swig* \
 	g++-7* gcc-7* g++-8* gcc-8* gfortran* \
 	gh subversion mercurial mercurial-common \
 	info install-info landscape-common \
-	libpython2* imagemagick* vim vim-* \
+	libpython2* imagemagick* libmagic* vim vim-* \
 	man-db manpages \
 	mono-* mono* libmono-* \
 	nuget packages-microsoft-prod snapd yarn \
