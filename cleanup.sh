@@ -147,4 +147,6 @@ echo "::group::Disk Space After Cleanup"
 df -hlT /
 echo "::endgroup::"
 
+printf "\nIf this action really helped you,\n Go to https://github.com/marketplace/actions/github-actions-cleaner\n And show your love by giving a star.\n\n"
+
 exit
