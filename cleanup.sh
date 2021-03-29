@@ -25,7 +25,7 @@ docker rmi -f $(docker images -q) &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Uninstalling Unnecessary Applications"
-sudo -EH apt-get -qq -y update &>/dev/null
+sudo -EH apt-fast -qq -y update &>/dev/null
 REL=$(grep "UBUNTU_CODENAME" /etc/os-release | cut -d'=' -f2)
 if [[ ${REL} == "focal" ]]; then
 	APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2 python2-minimal libpython-dev clang-9 clang-format-9 llvm-10-dev llvm-10-runtime llvm-10-tools llvm-10 lld-10 lld-9 libllvm10 libllvm9 libclang-common-10-dev libclang-cpp10 libclang1-10 clang-10 clang-format-10"
@@ -33,7 +33,7 @@ elif [[ ${REL} == "bionic" ]]; then
 	APT_Pac4Purge="clang-6.0 clang-format-6.0 libclang-common-6.0-dev libclang1-6.0 liblldb-6.0 libllvm6.0 llvm-6.0-dev lld-6.0"
 fi
 unset REL
-sudo -EH apt-get -qq -y purge \
+sudo -EH apt-fast -qq -y purge \
 	${APT_Pac4Purge} \
 	adoptopenjdk-* openjdk* ant* \
 	*-icon-theme plymouth *-theme* fonts-* gsfonts gtk-update-icon-cache \
@@ -57,7 +57,7 @@ sudo -EH apt-get -qq -y purge \
 	nuget packages-microsoft-prod snapd yarn \
 	php-* php5* php7* php8* snmp \
 	&>/dev/null
-sudo -EH apt-get -qq -y autoremove &>/dev/null
+sudo -EH apt-fast -qq -y autoremove &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Removing Homebrew Completely"
