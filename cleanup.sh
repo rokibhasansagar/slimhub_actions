@@ -9,7 +9,7 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 # Prepare
-while ((${SECONDS_LEFT:=5} > 0)); do
+while ((${SECONDS_LEFT:=10} > 0)); do
 	printf "Please wait %ss ...\n" "${SECONDS_LEFT}"
 	sleep 1
 	SECONDS_LEFT=$((SECONDS_LEFT - 1))
