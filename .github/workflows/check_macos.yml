@@ -1,0 +1,23 @@
+name: slimhub_actions Check on macOS
+
+on:
+  push:
+    branches: [ mac ]
+    paths:
+    - 'cleanup.sh'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  cleanup:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-10.15, macos-11.0]
+
+    steps:
+      - uses: actions/checkout@main
+      - name: Cleanups
+        uses: rokibhasansagar/slimhub_actions@mac
