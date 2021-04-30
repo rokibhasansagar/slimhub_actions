@@ -1,0 +1,19 @@
+name: slimhub_actions Check on Ubuntu
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'cleanup.sh'
+
+jobs:
+  cleanup:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-18.04, ubuntu-20.04]
+
+    steps:
+      - uses: actions/checkout@main
+      - name: Cleanups
+        uses: rokibhasansagar/slimhub_actions@main
