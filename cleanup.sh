@@ -32,7 +32,6 @@ if [[ ${REL} == "focal" ]]; then
 elif [[ ${REL} == "bionic" ]]; then
   APT_Pac4Purge="python-dev"
 fi
-unset REL
 sudo -EH apt-fast -qq -y purge \
   ${APT_Pac4Purge} \
   adoptopenjdk-* openjdk* ant* \
@@ -45,9 +44,8 @@ sudo -EH apt-fast -qq -y purge \
   brltty byobu htop \
   buildah hhvm kubectl packagekit* podman podman-plugins skopeo \
   chromium-browser firebird* firefox google-chrome* xvfb \
-  clang-8 clang-format-8 libclang-common-8-dev libclang1-8 cpp-7 cpp-8 lld-8 llvm-8* libllvm8 liblldb-8 \
   esl-erlang ghc-* groff-base rake r-base* r-cran-* r-doc-* r-recommended ruby* swig* \
-  g++-7* gcc-7* g++-8* gcc-8* gfortran* \
+  gfortran* \
   gh subversion mercurial mercurial-common \
   info install-info landscape-common \
   libpython2* imagemagick* libmagic* vim vim-* \
@@ -57,6 +55,26 @@ sudo -EH apt-fast -qq -y purge \
   php-* php5* php7* php8* snmp \
   &>/dev/null
 sudo -EH apt-fast -qq -y autoremove &>/dev/null
+{
+  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
+  sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+  sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
+  sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100
+  sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-9 90
+  sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-10 100
+  sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-9 90
+  sudo update-alternatives --install /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-10 100
+  sudo update-alternatives --install /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-9 90
+  sudo update-alternatives --install /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-10 100
+  sudo update-alternatives --install /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-9 90
+  sudo update-alternatives --install /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 100
+  sudo update-alternatives --install /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-9 90
+  sudo update-alternatives --install /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-10 100
+  sudo update-alternatives --install /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-9 90
+  sudo update-alternatives --install /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 100
+  sudo update-alternatives --install /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-9 90
+} &>/dev/null
 echo "::endgroup::"
 
 {
@@ -96,8 +114,8 @@ printf "Removing Julia, Rust, Cargo, Rubygems, Rake, Swift, Haskell, Erlang...\n
 parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/local/julia* /usr/bin/julia ::: /usr/share/rust /home/runner/.cargo /home/runner/.rustup /home/runner/.ghcup ::: /usr/local/bin/rake /usr/local/bin/rdoc /usr/local/bin/ri /usr/local/bin/racc /usr/local/bin/rougify ::: /usr/local/bin/bundle /usr/local/bin/bundler /var/lib/gems ::: /usr/share/swift /usr/local/bin/swift /usr/local/bin/swiftc /usr/bin/ghc /usr/local/.ghcup /usr/local/bin/stack /usr/local/bin/rebar3 /usr/share/sbt /usr/bin/sbt /usr/bin/go /usr/bin/gofmt
 printf "Removing Various Cloud CLI Tools, Different Kubernetes & Container Management Programs...\n"
 parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws /usr/local/bin/aliyun /usr/share/az_* /opt/az /usr/bin/az /usr/local/bin/azcopy* /usr/bin/azcopy /usr/lib/azcopy /usr/local/bin/oc /usr/local/bin/oras ::: /usr/local/bin/packer /usr/local/bin/terraform /usr/local/bin/helm /usr/local/bin/kubectl /usr/local/bin/kind /usr/local/bin/kustomize /usr/local/bin/minikube /usr/libexec/catatonit/catatonit
-printf "Removing Microsoft dotnet Application Remains, Java GraalVM, Manpages, Remains of Apt Packages...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/share/dotnet ::: /usr/local/graalvm ::: /usr/share/man ::: /var/lib/apt/lists/* /var/cache/apt/archives/* /etc/apt/sources.list.d/*
+printf "Removing Microsoft dotnet Application Remains, Java GraalVM, Manpages, Remains of Apt Package Caches...\n"
+parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/share/dotnet ::: /usr/local/graalvm ::: /usr/share/man ::: /var/lib/apt/lists/* /var/cache/apt/archives/*
 echo "::endgroup::"
 
 echo "::group::Clearing Unwanted Environment Variables"
