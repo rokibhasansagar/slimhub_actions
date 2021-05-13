@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
     - 'cleanup.sh'
+  workflow_dispatch:
 
 jobs:
   cleanup:
@@ -17,3 +18,11 @@ jobs:
       - uses: actions/checkout@main
       - name: Cleanups
         uses: rokibhasansagar/slimhub_actions@main
+      - name: Apt Checks
+        run: sudo apt list --installed
+      - name: Local Bin checks
+        run: ls -lAog /usr/local/bin
+      - name: Glbal Bin checks
+        run: ls -lAog /usr/bin
+      - name: Envirnment Variables Check
+        run: printenv | sort
