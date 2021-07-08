@@ -8,11 +8,11 @@ fi
 # Make Sure The Environment Is Non-Interactive
 export DEBIAN_FRONTEND=noninteractive
 
-# Prepare
-while ((${SECONDS_LEFT:=10} > 0)); do
+# Prepare: Just To Populate Workflow Output Window
+until [[ "${SECONDS_LEFT:=10}" = 0 ]]; do
   printf "Please wait %ss ...\n" "${SECONDS_LEFT}"
-  sleep 1
-  SECONDS_LEFT=$((SECONDS_LEFT - 1))
+  sleep 0.5
+  SECONDS_LEFT=$(echo "${SECONDS_LEFT} - 0.5" | bc)
 done
 unset SECONDS_LEFT
 
@@ -26,6 +26,7 @@ echo "::endgroup::"
 
 echo "::group::Uninstalling Unnecessary Applications"
 sudo -EH apt-fast -qq -y update &>/dev/null
+printf "This process will consume most of the cleanup time as APT Package Manager cleans Applications with Single Process.\nParallelism is Not Possible Here, So You Have To Wait For Some Time...\n"
 REL=$(grep "UBUNTU_CODENAME" /etc/os-release | cut -d'=' -f2)
 if [[ ${REL} == "focal" ]]; then
   APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2-dev python2-minimal libpython-dev clang-9 clang-format-9 llvm-10-dev llvm-10-runtime llvm-10-tools llvm-10 lld-10 lld-9 libllvm10 libllvm9 libclang-common-10-dev libclang-cpp10 libclang1-10 clang-10 clang-format-10"
@@ -119,6 +120,7 @@ parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/shar
 echo "::endgroup::"
 
 echo "::group::Clearing Unwanted Environment Variables"
+printf "This However is Not Retained after the Step is finished. So this part might be removed in the future.\n"
 {
   sudo sed -i -e '/^PATH=/d;/hostedtoolcache/d;/^AZURE/d;/^SWIFT/d;/^DOTNET/d;/DRIVER/d;/^CHROME/d;/HASKELL/d;/^JAVA/d;/^SELENIUM/d;/^GRAALVM/d;/^ANT/d;/^GRADLE/d;/^LEIN/d;/^CONDA/d;/^VCPKG/d;/^ANDROID/d;/^PIPX/d;/^HOMEBREW/d;' /etc/environment
   sudo sed -i '1i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' /etc/environment
