@@ -16,9 +16,11 @@ jobs:
 
     steps:
       - uses: actions/checkout@main
+      - name: Raw Environment Apt Checkup
+        run: sudo apt list --installed
       - name: Cleanups
         uses: rokibhasansagar/slimhub_actions@main
-      - name: Apt Checks
+      - name: Post-Cleanup Apt Checkup
         run: sudo apt list --installed
       - name: Local Bin checks
         run: ls -lAog /usr/local/bin
