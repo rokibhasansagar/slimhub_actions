@@ -29,12 +29,14 @@ sudo -EH apt-fast -qq -y update &>/dev/null
 printf "This process will consume most of the cleanup time as APT Package Manager cleans Applications with Single Process.\nParallelism is Not Possible Here, So You Have To Wait For Some Time...\n"
 REL=$(grep "UBUNTU_CODENAME" /etc/os-release | cut -d'=' -f2)
 if [[ ${REL} == "focal" ]]; then
-  APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2-dev python2-minimal libpython-dev clang-9 clang-format-9 llvm-10-dev llvm-10-runtime llvm-10-tools llvm-10 lld-10 lld-9 libllvm10 libllvm9 libclang-common-10-dev libclang-cpp10 libclang1-10 clang-10 clang-format-10"
+  APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2-dev python2-minimal libpython-dev libllvm-* llvm-12-linker-tools"
 elif [[ ${REL} == "bionic" ]]; then
-  APT_Pac4Purge="python-dev"
+  APT_Pac4Purge="python-dev libllvm6.0"
 fi
 sudo -EH apt-fast -qq -y purge \
   ${APT_Pac4Purge} \
+  clang-* clang-format-* libclang-common-*-dev libclang-cpp* libclang1-* \
+  liblldb-* lld-* lldb-* llvm-*-dev llvm-*-runtime llvm-*-tools llvm-* \
   adoptopenjdk-* openjdk* ant* \
   *-icon-theme plymouth *-theme* fonts-* gsfonts gtk-update-icon-cache \
   google-cloud-sdk \
