@@ -21,7 +21,7 @@ df -hlT /
 echo "::endgroup::"
 
 echo "::group::Clearing Docker Image Caches"
-docker rmi -f $(docker images -q) &>/dev/null
+docker system prune -af &>/dev/null
 echo "::endgroup::"
 
 echo "::group::Uninstalling Unnecessary Applications"
@@ -42,7 +42,7 @@ sudo -EH apt-fast -qq -y purge \
   google-cloud-sdk \
   apache2* nginx msodbcsql* mssql-tools mysql* libmysqlclient* unixodbc-dev postgresql* libpq-dev odbcinst* mongodb-* sphinxsearch \
   apport* popularity-contest \
-  aspnetcore-* dotnet* \
+  aspnetcore-* dotnet* powershell \
   azure-cli session-manager-plugin \
   brltty byobu htop \
   buildah hhvm kubectl packagekit* podman podman-plugins skopeo \
@@ -51,7 +51,7 @@ sudo -EH apt-fast -qq -y purge \
   gfortran* \
   gh subversion mercurial mercurial-common \
   info install-info landscape-common \
-  libpython2* imagemagick* libmagic* vim vim-* \
+  libpython2* imagemagick* libmagic* vim vim-* libgl1-mesa-dri \
   man-db manpages \
   mono-* mono* libmono-* \
   nuget packages-microsoft-prod snapd yarn \
