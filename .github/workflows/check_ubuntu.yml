@@ -1,10 +1,15 @@
 name: slimhub_actions Check on Ubuntu
 
 on:
+  pull_request:
+    branches: [ main ]
+    paths:
+    - 'cleanup.sh'
   push:
     branches: [ main ]
     paths:
     - 'cleanup.sh'
+    - '.github/workflows/check_ubuntu.yml'
   workflow_dispatch:
 
 jobs:
@@ -19,12 +24,18 @@ jobs:
       - name: Raw Environment Apt Checkup
         run: sudo apt list --installed
       - name: Cleanups
-        uses: rokibhasansagar/slimhub_actions@main
+        run: |
+          chmod a+x ./cleanup.sh
+          bash ./cleanup.sh
       - name: Post-Cleanup Apt Checkup
         run: sudo apt list --installed
+      - name: Check Top 20 Storage-hungry APT Packages
+        run: |
+          printf " MB   -  Package Name\n================\n"
+          dpkg-query -Wf '${db:Status-Status} ${Installed-Size}\t${Package}\n' | sed -ne 's/^installed //p' | sort -rh 2>/dev/null | head -n20 | awk '{print $1/1024, $2}'
       - name: Local Bin checks
         run: ls -lAog /usr/local/bin
-      - name: Glbal Bin checks
+      - name: Global Bin checks
         run: ls -lAog /usr/bin
       - name: Envirnment Variables Check
         run: printenv | sort
