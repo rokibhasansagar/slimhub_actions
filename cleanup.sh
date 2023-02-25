@@ -8,13 +8,13 @@ fi
 # Make Sure The Environment Is Non-Interactive
 export DEBIAN_FRONTEND=noninteractive
 
-# Prepare: Just To Populate Workflow Output Window
-until [[ "${SECONDS_LEFT:=10}" = 0 ]]; do
-  printf "Please wait %ss ...\n" "${SECONDS_LEFT}"
-  sleep 0.5
-  SECONDS_LEFT=$(echo "${SECONDS_LEFT} - 0.5" | bc)
+# 2 Second Echo, Just To Populate Workflow Output Window
+until [[ "${SECONDS_LEFT:=2.00}" == 0.00 ]]; do
+  printf "\rPlease wait %ss ..." "${SECONDS_LEFT}"
+  sleep 0.2498
+  SECONDS_LEFT=$(printf %.2f $(echo "${SECONDS_LEFT} - 0.25" | bc))
 done
-unset SECONDS_LEFT
+unset SECONDS_LEFT && printf "\n"
 
 echo "::group::Disk Space Before Cleanup"
 df -hlT /
