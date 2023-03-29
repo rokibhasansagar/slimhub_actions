@@ -1,140 +1,421 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-if [[ $OSTYPE != "linux-gnu" ]]; then
-  printf "This Cleanup Script Should Be Run On Ubuntu Runner.\n"
+# shellcheck disable=SC2086,SC2154,SC2155,SC2046,SC2001,SC2063
+
+# Project [Source](https://github.com/rokibhasansagar/slimhub_actions.git)
+# License: [MIT](https://github.com/rokibhasansagar/slimhub_actions/blob/main/LICENSE)
+
+# Move to temporary directory
+cd "$(mktemp -d)" || exit 1
+
+if [[ ${GITHUB_ACTIONS} != "true" || ${OSTYPE} != "linux-gnu" ]]; then
+  printf "This Cleanup Script Is Intended For Ubuntu Runner.\n"
   exit 1
 fi
 
 # Make Sure The Environment Is Non-Interactive
 export DEBIAN_FRONTEND=noninteractive
 
-# 2 Second Echo, Just To Populate Workflow Output Window
-until [[ "${SECONDS_LEFT:=2.00}" == 0.00 ]]; do
-  printf "\rPlease wait %ss ..." "${SECONDS_LEFT}"
-  sleep 0.2498
-  SECONDS_LEFT=$(printf %.2f $(echo "${SECONDS_LEFT} - 0.25" | bc))
+export AptPurgeList=" " DirPurgeList=" "
+
+# Make supported retainer list
+cat >/tmp/retainer.list <<EOR
+- homebrew
+- docker_imgcache
+- docker_buildkit
+  + docker_imgcache
+- container_tools
+- android_sdk
+- java_tools
+  + toolcache_java
+- database
+- browser_all
+  + browser_firefox
+  + browser_chrome
+  + browser_edge
+- xvfb
+- webservers
+- php
+- cloud_cli
+- vcs
+- vim
+- dotnet
+- vcpkg
+- mono
+- ruby
+  + toolcache_ruby
+- nodejs_npm
+  + toolcache_node
+- pipx
+- toolcache_all
+  + toolcache_codeql
+  + toolcache_java
+  + toolcache_pypy
+  + toolcache_python
+  + toolcache_ruby
+  + toolcache_go
+  + toolcache_node
+- compiler_all
+  + compiler_gcc
+  + compiler_gfortran
+  + compiler_llvm_clang
+  + compiler_cmake
+- powershell
+- rust
+- haskell
+- rlang
+- kotlin
+- julia
+- swift
+- snapd
+- manpages
+- libgtk
+EOR
+
+export retain=$(sed 's/\,/ /g;s/\s\s/ /g;s/-/_/g' <<<"${retain,,}")
+
+# Check if the values provided are correct or not
+for i in ${retain}; do
+  if ! awk '{print $NF}' /tmp/retainer.list | sort -u | grep -q "^${i}$"; then
+    echo -e "[!] Invalid Input: ${i}, Ignoring..." && continue
+  fi
+  export retain_${i}="true" && echo -e "[i] Retaining: ${i}"
 done
-unset SECONDS_LEFT && printf "\n"
 
-echo "::group::Disk Space Before Cleanup"
-df -hlT /
+echo "::group::<{[<]}> Raw Disk Space Before Cleanup <{[>]}>"
+df --sync -BM --output=pcent,used,avail /
 echo "::endgroup::"
 
-echo "::group::Clearing Docker Image Caches"
-docker rmi -f $(docker images -q) &>/dev/null
+echo "::group:: {[+]}  Temporary Apt Cache Update"
+sudo apt-fast update -qy
 echo "::endgroup::"
 
-echo "::group::Uninstalling Unnecessary Applications"
-sudo -EH apt-fast -qq -y update &>/dev/null
-printf "This process will consume most of the cleanup time as APT Package Manager cleans Applications with Single Process.\nParallelism is Not Possible Here, So You Have To Wait For Some Time...\n"
-REL=$(grep "UBUNTU_CODENAME" /etc/os-release | cut -d'=' -f2)
-if [[ ${REL} == "focal" ]]; then
-  APT_Pac4Purge="alsa-topology-conf alsa-ucm-conf python2-dev python2-minimal libpython-dev libllvm-* llvm-12-linker-tools"
-elif [[ ${REL} == "bionic" ]]; then
-  APT_Pac4Purge="python-dev libllvm6.0"
+if [[ ${retain_homebrew} != "true" ]]; then
+  echo "::group:: {[-]}  Clearing Homebrew"
+  curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh
+  chmod a+x uninstall-brew.sh
+  NONINTERACTIVE=1 ./uninstall-brew.sh -f -q 2>/dev/null
+  sudo rm -rf -- ./uninstall-brew.sh 2>/dev/null
+  export DirPurgeList+=" /home/linuxbrew"
+  echo "::endgroup::"
 fi
-sudo -EH apt-fast -qq -y purge \
-  ${APT_Pac4Purge} \
-  clang-* clang-format-* libclang-common-*-dev libclang-cpp* libclang1-* \
-  liblldb-* lld-* lldb-* llvm-*-dev llvm-*-runtime llvm-*-tools llvm-* \
-  adoptopenjdk-* openjdk* ant* \
-  *-icon-theme plymouth *-theme* fonts-* gsfonts gtk-update-icon-cache \
-  google-cloud-sdk \
-  apache2* nginx msodbcsql* mssql-tools mysql* libmysqlclient* unixodbc-dev postgresql* libpq-dev odbcinst* mongodb-* sphinxsearch \
-  apport* popularity-contest \
-  aspnetcore-* dotnet* \
-  azure-cli session-manager-plugin \
-  brltty byobu htop \
-  buildah hhvm kubectl packagekit* podman podman-plugins skopeo \
-  chromium-browser firebird* firefox google-chrome* xvfb \
-  esl-erlang ghc-* groff-base rake r-base* r-cran-* r-doc-* r-recommended ruby* swig* \
-  gfortran* \
-  gh subversion mercurial mercurial-common \
-  info install-info landscape-common \
-  libpython2* imagemagick* libmagic* vim vim-* \
-  man-db manpages \
-  mono-* mono* libmono-* \
-  nuget packages-microsoft-prod snapd yarn \
-  php-* php5* php7* php8* snmp \
-  &>/dev/null
-sudo -EH apt-fast -qq -y autoremove &>/dev/null
-{
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
-  sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
-  sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
-  sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
-  sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-10 100
-  sudo update-alternatives --install /usr/bin/cpp cpp /usr/bin/cpp-9 90
-  sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-10 100
-  sudo update-alternatives --install /usr/bin/gcov gcov /usr/bin/gcov-9 90
-  sudo update-alternatives --install /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-10 100
-  sudo update-alternatives --install /usr/bin/gcov-dump gcov-dump /usr/bin/gcov-dump-9 90
-  sudo update-alternatives --install /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-10 100
-  sudo update-alternatives --install /usr/bin/gcov-tool gcov-tool /usr/bin/gcov-tool-9 90
-  sudo update-alternatives --install /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-10 100
-  sudo update-alternatives --install /usr/bin/gcc-ar gcc-ar /usr/bin/gcc-ar-9 90
-  sudo update-alternatives --install /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-10 100
-  sudo update-alternatives --install /usr/bin/gcc-nm gcc-nm /usr/bin/gcc-nm-9 90
-  sudo update-alternatives --install /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-10 100
-  sudo update-alternatives --install /usr/bin/gcc-ranlib gcc-ranlib /usr/bin/gcc-ranlib-9 90
-} &>/dev/null
-echo "::endgroup::"
 
-{
-  echo "will cite" | parallel --citation
-} &>/dev/null
+if [[ ${retain_docker_buildkit} != "true" ]]; then
+  export retain_docker_imgcache="false"
+fi
+if [[ ${retain_docker_imgcache} != "true" ]]; then
+  echo "::group:: {[-]}  Clearing Docker Image Caches"
+  echo -e "The Following Docker Images Is Being Purged..."
+  docker rmi -f $(docker images -q) 2>/dev/null
+  echo "::endgroup::"
+fi
+if [[ ${retain_docker_buildkit} != "true" ]]; then
+  export AptPurgeList+=" moby-buildx moby-cli moby-compose moby-containerd moby-engine moby-runc"
+  export DirPurgeList+=" /usr/bin/docker-credential-ecr-login /usr/local/bin/docker-compose /usr/bin/docker*"
+fi
 
-echo "::group::Removing Homebrew Completely"
-curl -sL https://raw.githubusercontent.com/Homebrew/install/master/uninstall.sh -o uninstall-brew.sh && chmod a+x uninstall-brew.sh
-./uninstall-brew.sh -f -q &>/dev/null
-sudo rm -rf -- ./uninstall-brew.sh /home/linuxbrew &>/dev/null
-echo "::endgroup::"
+if [[ ${retain_container_tools} != "true" ]]; then
+  export AptPurgeList+=" podman buildah skopeo containers-common"
+  export DirPurgeList+=" $(parallel -j4 echo /usr/local/bin/{} ::: kind kubectl helm minikube kustomize)"
+  export DirPurgeList+=" /usr/local/bin/terraform"
+fi
 
-echo "::group::Removing NodeJS, NPM & NPX"
-{
-  sudo npm list -g --depth=0. 2>/dev/null | awk -F ' ' '{print $2}' | awk -F '@[0-9]' '{print $1}' | grep -v "^n$" | sudo xargs npm remove -g
-  yes | sudo n uninstall
-  parallel --use-cpus-instead-of-cores sudo rm -rf {} 2>/dev/null ::: /usr/local/lib/node_modules ::: /usr/local/n ::: /usr/local/bin/n /usr/local/bin/vercel /usr/local/bin/now
-} &>/dev/null
-echo "::endgroup::"
+if [[ ${retain_android_sdk} != "true" ]]; then
+  export DirPurgeList+=" $(parallel -j4 echo /usr/local/lib/android/sdk/{} ::: $(ls /usr/local/lib/android/sdk/))"
+  export DirPurgeList+=" /usr/local/lib/android"
+fi
 
-echo "::group::Purging PIPX & PIP packages"
-{
-  pipx uninstall-all && sudo pip3 uninstall -q -y pipx
+if [[ ${retain_java_tools} != "true" ]]; then
+  export AptPurgeList+=" temurin-*-jdk adoptopenjdk-* adoptium-ca-certificates openjdk-*"
+  export retain_toolcache_java="false"
+  export DirPurgeList+=" /usr/lib/jvm/ /usr/local/graalvm /usr/share/java/selenium-server*.jar"
+  export DirPurgeList+=" /usr/share/*gradle* /usr/bin/gradle /usr/share/*maven* /usr/bin/mvn"
+  export AptPurgeList+=" ant ant-optional"
+fi
+
+if [[ ${retain_database} != "true" ]]; then
+  export AptPurgeList+=" postgresql-* libpq-dev libmysqlclient* msodbcsql* mssql-tools unixodbc-dev mysql-client* mysql-common mysql-server* php*-*sql sphinxsearch mongodb*"
+  export DirPurgeList+=" /usr/share/mysql* /opt/mssql-tools /usr/local/sqlpackage"
+fi
+
+if [[ ${retain_browser_all} == "true" ]]; then
+  for i in firefox chrome edge; do export retain_browser_${i}="true"; done
+fi
+if [[ ${retain_browser_firefox} != "true" ]]; then
+  sudo bash -c 'cat >/etc/apt/preferences.d/mozilla-firefox' <<EOX
+Package: *
+Pin: release o=LP-PPA-mozillateam
+Pin-Priority: 1001
+EOX
+  export AptPurgeList+=" firefox"
+  export DirPurgeList+=" /usr/lib/firefox /usr/local/share/gecko_driver /usr/bin/geckodriver"
+fi
+if [[ ${retain_browser_chrome} != "true" ]]; then
+  export AptPurgeList+=" google-chrome-stable"
+  export DirPurgeList+=" /usr/bin/google-chrome /usr/local/share/chrome_driver /usr/bin/chromedriver /usr/local/share/chromium /usr/bin/chromium /usr/bin/chromium-browser"
+fi
+if [[ ${retain_browser_edge} != "true" ]]; then
+  export AptPurgeList+=" microsoft-edge-stable"
+  export DirPurgeList+=" /usr/local/share/edge_driver /usr/bin/msedgedriver"
+fi
+
+if [[ ${retain_xvfb} != "true" ]]; then
+  export AptPurgeList+=" xvfb"
+fi
+
+if [[ ${retain_webservers} != "true" ]]; then
+  export AptPurgeList+=" apache2 apache2-* nginx nginx-*"
+fi
+
+if [[ ${retain_php} != "true" ]]; then
+  export AptPurgeList+=" php-* php7* php8*"
+  export DirPurgeList+=" /usr/share/php* /etc/php /usr/local/bin/phpunit"
+  export DirPurgeList+=" /usr/bin/composer /home/runner/.config/composer /etc/skel/.composer /etc/.composer"
+fi
+
+if [[ ${retain_cloud_cli} != "true" ]]; then
+  export AptPurgeList+=" session-manager-plugin azure-cli google-cloud-sdk"
+  export DirPurgeList+=" /usr/local/bin/aliyun /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws /usr/local/aws-sam-cli /usr/local/bin/azcopy* /usr/share/az_* /opt/az /usr/bin/az /usr/share/google-cloud-sdk /usr/local/bin/bicep /usr/local/bin/oc /usr/local/bin/oras"
+fi
+
+if [[ ${retain_vcs} != "true" ]]; then
+  # git cli is kept back, hub and gh are removed
+  export AptPurgeList+=" gh subversion mercurial"
+  export DirPurgeList+=" /usr/local/bin/hub"
+fi
+
+if [[ ${retain_vim} != "true" ]]; then
+  export AptPurgeList+=" vim vim-*"
+fi
+
+if [[ ${retain_dotnet} != "true" ]]; then
+  export AptPurgeList+=" dotnet* aspnetcore*"
+  export DirPurgeList+=" /usr/share/dotnet /home/runner/.dotnet /etc/skel/.dotnet/tools /etc/.dotnet/tools"
+fi
+
+if [[ ${retain_vcpkg} != "true" ]]; then
+  export DirPurgeList+=" /usr/local/share/vcpkg /usr/local/bin/vcpkg"
+fi
+
+if [[ ${retain_mono} != "true" ]]; then
+  export AptPurgeList+=" mono-* mono* libmono-* libmono* monodoc* msbuild nuget"
+fi
+
+if [[ ${retain_ruby} != "true" ]]; then
+  export AptPurgeList+=" ruby* rake ri"
+  export DirPurgeList+=" /usr/share/ri"
+  export retain_toolcache_ruby="false"
+fi
+
+if [[ ${retain_nodejs_npm} != "true" ]]; then
+  curl -sL "https://github.com/actions/runner-images/raw/main/images/linux/toolsets/toolset-$(lsb_release -rs | sed 's/\.//g').json" >/tmp/toolset.json
+  sudo npm remove -g $(sed 's/^n$//g' <<<"$(jq -r ".node_modules[].name" /tmp/toolset.json)") &>/dev/null
+  { yes | sudo n uninstall; } &>/dev/null
+  export retain_toolcache_node="false"
+  export DirPurgeList+=" /usr/local/n /usr/local/bin/n /usr/local/lib/node_modules /etc/skel/.nvm /home/runner/.nvm"
+fi
+
+if [[ "${retain_toolcache_pypy}" != "true" && "${retain_toolcache_python}" != "true" ]]; then
+  export retain_pipx="false"
+fi
+if [[ ${retain_pipx} != "true" ]]; then
+  { pipx uninstall-all && sudo pip3 uninstall -q -y pipx; } &>/dev/null
+  export DirPurgeList+=" /opt/pipx /opt/pipx_bin"
   find /usr/share /usr/lib ~/.local/lib -depth -type d -name __pycache__ \
-    -exec rm -rf '{}' + 2>/dev/null;
-} &>/dev/null
+    -exec rm -rf '{}' + &>/dev/null;
+fi
+
+if [[ ${retain_toolcache_all} == "true" ]]; then
+  for i in CodeQL Java PyPy Python Ruby go node; do export retain_toolcache_${i,,}="true"; done
+fi
+if [[ "${retain_toolcache_codeql}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/CodeQL"
+fi
+if [[ "${retain_toolcache_java}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/Java*"
+fi
+if [[ "${retain_toolcache_pypy}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/PyPy"
+fi
+if [[ "${retain_toolcache_python}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/Python"
+fi
+if [[ "${retain_toolcache_ruby}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/Ruby"
+fi
+if [[ "${retain_toolcache_go}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/go"
+fi
+if [[ "${retain_toolcache_node}" != "true" ]]; then
+  export DirPurgeList+=" /opt/hostedtoolcache/node"
+fi
+
+if [[ ${retain_compiler_all} == "true" ]]; then
+  for i in gcc gfortran llvm_clang cmake; do export retain_compiler_${i}="true"; done
+fi
+if [[ ${retain_compiler_gcc} != "true" ]]; then
+  case "$(lsb_release -rs)" in
+  "22.04") export AptPurgeList+=" g++-9 g++-10 g++-12 gcc-9 gcc-10 gcc-12" ;;
+  "20.04") export AptPurgeList+=" g++-10 g++-12 gcc-10 gcc-12" ;;
+  esac
+fi
+if [[ ${retain_compiler_gfortran} != "true" ]]; then
+  export AptPurgeList+=" gfortran-*"
+fi
+if [[ ${retain_compiler_llvm_clang} != "true" ]]; then
+  export AptPurgeList+=" clang-* libclang* llvm-* libllvm* lldb-* lld-* clang-format-* clang-tidy-*"
+  export DirPurgeList+=" /usr/lib/llvm-*"
+fi
+if [[ ${retain_compiler_cmake} != "true" ]]; then
+  export DirPurgeList+=" $(parallel -j4 echo /usr/local/bin/{} ::: ccmake cmake cmake-gui cpack ctest)"
+  export DirPurgeList+=" /usr/local/share/cmake-* /usr/local/*cmake* /usr/local/*/*cmake*"
+fi
+
+if [[ ${retain_powershell} != "true" ]]; then
+  export AptPurgeList+=" powershell"
+  export DirPurgeList+=" /opt/microsoft/powershell /usr/local/share/powershell"
+fi
+
+if [[ ${retain_rust} != "true" ]]; then
+  export DirPurgeList+=" /usr/share/rust /home/runner/.cargo /home/runner/.rustup /etc/skel/.rustup /etc/skel/.cargo /etc/.rustup /etc/.cargo"
+fi
+
+if [[ ${retain_haskell} != "true" ]]; then
+  ghcup nuke &>/dev/null || true
+  export DirPurgeList+=" /usr/local/bin/stack /home/runner/.ghcup /usr/local/.ghcup"
+fi
+
+if [[ ${retain_rlang} != "true" ]]; then
+  export AptPurgeList+=" r-base* r-cran* r-doc* r-recommended"
+fi
+
+if [[ ${retain_kotlin} != "true" ]]; then
+  export DirPurgeList+=" /usr/share/kotlinc /usr/bin/kotlin*"
+fi
+
+if [[ ${retain_julia} != "true" ]]; then
+  export DirPurgeList+=" /usr/local/julia* /usr/bin/julia"
+fi
+
+if [[ ${retain_swift} != "true" ]]; then
+  export DirPurgeList+=" /usr/share/swift /usr/local/bin/swift /usr/local/bin/swiftc"
+fi
+
+if [[ ${retain_snapd} != "true" ]]; then
+  {
+    for i in lxd core20; do sudo snap remove --purge ${i}; done
+    sudo snap remove --purge snapd
+  } &>/dev/null
+  sudo bash -c 'cat >/etc/apt/preferences.d/nosnap' <<EOX
+Package: snapd
+Pin: release a=*
+Pin-Priority: -10
+EOX
+  export AptPurgeList+=" snapd"
+  export DirPurgeList+=" /var/cache/snapd /home/runner/snap"
+fi
+
+if [[ ${retain_manpages} != "true" ]]; then
+  export AptPurgeList+=" man-db manpages"
+fi
+
+if [[ ${retain_libgtk} != "true" ]]; then
+  export AptPurgeList+=" libgtk-3-* ubuntu-mono *-icon-theme"
+fi
+
+# TODO: Add Additional apt Packages to be Removed
+if [[ "$(lsb_release -rs)" == "20.04" ]]; then
+  export AptPurgeList+=" esl-erlang" DirPurgeList+=" /usr/local/bin/rebar3"
+fi
+export AptPurgeList+=" imagemagick imagemagick-6-common libgl1-mesa-dri firebird* hhvm "
+export DirPurgeList+=" /usr/share/firebird* /opt/hhvm /usr/share/sbt /usr/bin/sbt /usr/local/share/phantomjs* /usr/local/bin/phantomjs /usr/local/bin/packer /usr/local/lib/lein /usr/local/bin/lein /usr/local/bin/pulumi /usr/local/bin/pulumi-* /usr/share/miniconda /usr/bin/conda /usr/local/lib/heroku"
+
+echo "::group:: {[-]}  Uninstalling and Purging apt Packages"
+
+# Case #1. List has no missing packages / essential packages
+#          All Done in Step 1
+# Case #2. List has missing packages
+#          Use _apt2unset to remove missing packages
+#          and try again from start
+# Case #3. List has essential packages
+#          Use _esscheck_process to deselect essentials
+#          and try again from start
+
+# ESSCheck variables
+export ESStart='WARNING: The following essential packages will be removed.' ESEnd='0 upgraded, 0 newly installed'
+
+# main uninstaller function _apt2purge_base
+_apt2purge_base() {
+  sudo -EH apt-get remove --quiet --assume-no --auto-remove --purge --fix-broken ${AptPurgeList} 1>/tmp/apt2purge.info 2>/tmp/apt2purge.log
+  sed -i.bak 's/'$'\u001b''//g;s/\[1;31m//g;s/\[0m//g' /tmp/apt2purge.{info,log} 2>/dev/null
+}
+# function apt2unset
+_apt2unset() {
+  echo -e "[i] Skipping Non-existing apt Packages: ${apt2unset}"
+  for i in ${apt2unset}; do
+    if grep -q '*' <<<"${i}"; then i=$(sed 's/\*/\\*/g' <<<"${i}"); fi
+    export AptPurgeList=" ${AptPurgeList} "
+    export AptPurgeList=$(sed 's/'" ${i} "'/ /g' <<<"${AptPurgeList}")
+  done
+}
+# function _esscheck_process
+_esscheck_process() {
+  if ! grep -q "${ESEnd}" /tmp/apt2purge.log; then
+    export ESEnd=$(tail /tmp/apt2purge.log | grep -e "upgraded\|newly installed\|to remove")
+  fi
+  export EsnPackages=$(sed -e 's/'"${ESStart}"'/\n'"${ESStart}"'\n/' -e 's/'"${ESEnd}"'/\n'"${ESEnd}"'\n/' /tmp/apt2purge.log | sed -n '/'"${ESStart}"'/,/'"${ESEnd}"'/{//!p}' | sed -e '1d;2d;$d;s/due to //g;s/^\s\s//g;s/[()]//g' | tr ' ' '\n'  | sort -u | paste -sd' ')
+  export AllPackages=" $(grep '*' /tmp/apt2purge.log | sed 's/\*//g;s/^\s\s//g' | tr ' ' '\n'  | sort -u | paste -sd' ') "
+  export AllPackages=" ${AllPackages} "
+  for i in ${EsnPackages}; do export AllPackages=$(sed 's/'" ${i} "'/ /g' <<<"${AllPackages}"); done
+}
+export -f _apt2purge_base _apt2unset _esscheck_process
+
+# The whole function serves as Case #3
+_apt2purge_on_essfix() {
+  # The following function handles Case #1
+  _apt2purge_base
+  export apt2unset=$(grep "Unable to locate package" /tmp/apt2purge.log | awk '{print $NF}' | paste -sd' ')
+  # The following conditional block handles Case #2
+  if [[ ${apt2unset} != "" ]]; then
+    if grep -q "hhvm" <<<"${apt2unset}"; then export DirPurgeList=$(sed 's|\s/opt/hhvm||g' <<<"${DirPurgeList}"); fi
+    _apt2unset
+    if [[ ${AptPurgeList} != "" && ${AptPurgeList} != " " ]]; then
+      _apt2purge_base
+    fi
+  fi
+}
+
+echo -e "[i] List of apt Packages to be Removed: ${AptPurgeList}"
+
+# >>> Case #1 + Case #2
+_apt2purge_on_essfix
+
+# >>> Case #3: Has Essential packages
+if grep -q "${ESStart}" /tmp/apt2purge.log; then
+  _esscheck_process
+  export AptPurgeList=" ${AllPackages} "
+  _apt2purge_on_essfix
+fi
+
+# Redendent apt cleanup
+sudo apt autoclean >/dev/null || true
+sudo apt autoremove -qy 2>/dev/null || true
+sudo rm -rf /var/cache/apt/archives/ 2>/dev/null || true
 echo "::endgroup::"
 
-echo "::group::Removing Lots of Cached Programs & Unneeded Folders"
-printf "Removing Runner Tool Cache, Android SDK, NDK, Platform Tools, Gradle, Maven...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /opt/hostedtoolcache ::: /usr/local/lib/android ::: /usr/share/gradle* /usr/bin/gradle /usr/share/apache-maven* /usr/bin/mvn
-printf "Removing Microsoft vcpkg, Miniconda, Leiningen, Pulumi...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/local/share/vcpkg /usr/local/bin/vcpkg ::: /usr/share/miniconda ::: /usr/bin/conda /usr/local/lib/lein /usr/local/bin/lein /usr/local/bin/pulumi*
-printf "Removing Browser-based Webdrivers, PHP, Composer, Database Management Program Remains...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/share/java/selenium-server-standalone.jar /usr/local/share/phantomjs* /usr/local/bin/phantomjs /usr/local/share/chrome_driver /usr/bin/chromedriver /usr/local/share/gecko_driver /usr/bin/geckodriver ::: /etc/php /usr/bin/composer /usr/local/bin/phpunit ::: /var/lib/mysql /etc/mysql /usr/local/bin/sqlcmd /usr/local/bin/bcp /usr/local/bin/session-manager-plugin
-printf "Removing Julia, Rust, Cargo, Rubygems, Rake, Swift, Haskell, Erlang...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/local/julia* /usr/bin/julia ::: /usr/share/rust /home/runner/.cargo /home/runner/.rustup /home/runner/.ghcup ::: /usr/local/bin/rake /usr/local/bin/rdoc /usr/local/bin/ri /usr/local/bin/racc /usr/local/bin/rougify ::: /usr/local/bin/bundle /usr/local/bin/bundler /var/lib/gems ::: /usr/share/swift /usr/local/bin/swift /usr/local/bin/swiftc /usr/bin/ghc /usr/local/.ghcup /usr/local/bin/stack /usr/local/bin/rebar3 /usr/share/sbt /usr/bin/sbt /usr/bin/go /usr/bin/gofmt
-printf "Removing Various Cloud CLI Tools, Different Kubernetes & Container Management Programs...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws /usr/local/bin/aliyun /usr/share/az_* /opt/az /usr/bin/az /usr/local/bin/azcopy* /usr/bin/azcopy /usr/lib/azcopy /usr/local/bin/oc /usr/local/bin/oras ::: /usr/local/bin/packer /usr/local/bin/terraform /usr/local/bin/helm /usr/local/bin/kubectl /usr/local/bin/kind /usr/local/bin/kustomize /usr/local/bin/minikube /usr/libexec/catatonit/catatonit
-printf "Removing Microsoft dotnet Application Remains, Java GraalVM, Manpages, Remains of Apt Package Caches...\n"
-parallel --use-cpus-instead-of-cores sudo rm -rf -- {} 2>/dev/null ::: /usr/share/dotnet ::: /usr/local/graalvm ::: /usr/share/man ::: /var/lib/apt/lists/* /var/cache/apt/archives/*
+echo "::group:: {[-]}  Purging Unnecessary Files and Directories"
+parallel 'echo -e "Purging {}" && sudo rm -rf -- {}' ::: ${DirPurgeList}
+# Delete broken symlinks
+sudo find /home/runner/.local/ /home/runner/ /usr/share/ /usr/bin/ /usr/local/bin/ /usr/local/share/ /usr/local/ /opt/ /snap/ -xtype l -delete 2>/dev/null
 echo "::endgroup::"
 
-echo "::group::Clearing Unwanted Environment Variables"
-printf "This However is Not Retained after the Step is finished. So this part might be removed in the future.\n"
-{
-  sudo sed -i -e '/^PATH=/d;/hostedtoolcache/d;/^AZURE/d;/^SWIFT/d;/^DOTNET/d;/DRIVER/d;/^CHROME/d;/HASKELL/d;/^JAVA/d;/^SELENIUM/d;/^GRAALVM/d;/^ANT/d;/^GRADLE/d;/^LEIN/d;/^CONDA/d;/^VCPKG/d;/^ANDROID/d;/^PIPX/d;/^HOMEBREW/d;' /etc/environment
-  sudo sed -i '1i PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin' /etc/environment
-  sed -i '/HOME\/\.local\/bin/d' /home/runner/.bashrc
-  source /home/runner/.bashrc
-} &>/dev/null
+echo "::group:: {[-]}  Clearing Journal Logs"
+sudo journalctl --rotate && sudo journalctl --vacuum-time=1s
+sudo find /var/log -type f -regex ".*\.gz$" -delete
+sudo find /var/log -type f -regex ".*\.[0-9]$" -delete
+sudo find /var/log/ -type f -exec sudo cp /dev/null {} \;
 echo "::endgroup::"
 
-echo "::group::Disk Space After Cleanup"
-df -hlT /
+echo "::group::<{[>]}> Free Disk Space After Cleanup <{[<]}>"
+df --sync -BM --output=pcent,used,avail /
 echo "::endgroup::"
-
-printf "\nIf this action really helped you,\n Go to https://github.com/marketplace/actions/github-actions-cleaner\n And show your love by giving a star.\n\n"
-
-exit

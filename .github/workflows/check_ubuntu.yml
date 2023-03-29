@@ -1,4 +1,4 @@
-name: slimhub_actions Check on Ubuntu
+name: Cleaner Check on Ubuntu
 
 on:
   pull_request:
@@ -21,66 +21,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-18.04, ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-20.04, ubuntu-22.04]
 
     steps:
       - uses: actions/checkout@v3
         with:
           ref: 'main'
-      - name: Raw Environment Apt Checkup
+      - name: Raw Environment Checkup
+        continue-on-error: true
+        env:
+          wf_os: ${{matrix.os}}
+          state: raw
         run: |
-          echo "::group:: List Area"
-          sudo apt list --installed | sed '1d' | tee -a apt.preinstalled.raw.${{matrix.os}}.list
-          echo "::endgroup::"
-          echo "::group:: dpkg-query Debug Area"
-          dpkg-query -Wf 'Package: ${Package}\nSynopsis: ${binary:Summary}\nVersion: ${Version}\nISize: ${Installed-Size}\nPre-Depends: ${Pre-Depends}\nDepends: ${Depends}\n\n' | sed -e '/^Synopsis: $/d;/^Version: $/d;/^ISize: $/d;/^Pre-Depends: $/d;/^Depends: $/d' | tee -a apt.dependencies.${{matrix.os}}.list
-          echo "::endgroup::"
-          echo "::group:: Log Download Area"
-          for i in apt.preinstalled.raw.${{matrix.os}}.list apt.dependencies.${{matrix.os}}.list; do
-            tar -I'zstd --ultra -22 -T2' -cf "${i}.tzst" "${i}" && rm "${i}"
-            curl -s --upload-file "${i}.tzst" https://transfer.sh/ && echo
-          done
-          echo "::endgroup::"
-      - name: Cleanups
+          bash ./.github/checker.sh
+      - name: Cleanup Workspace
+        uses: rokibhasansagar/slimhub_actions@main
+        with:
+          retain: "homebrew"
+      - name: Clean Environment Checkup
+        continue-on-error: true
+        env:
+          wf_os: ${{matrix.os}}
+          state: clean
         run: |
-          sed '11,18d' ./cleanup.sh | bash 2>&1
-      - name: Post-Cleanup Apt Checkup
-        run: |
-          echo "::group:: List Area"
-          sudo apt list --installed | sed '1d' | tee -a apt.postinstalled.raw.${{matrix.os}}.list
-          echo "::endgroup::"
-          echo "::group:: dpkg-query Debug Area"
-          dpkg-query -Wf 'Package: ${Package}\nSynopsis: ${binary:Summary}\nVersion: ${Version}\nISize: ${Installed-Size}\nPre-Depends: ${Pre-Depends}\nDepends: ${Depends}\n\n' | sed -e '/^Synopsis: $/d;/^Version: $/d;/^ISize: $/d;/^Pre-Depends: $/d;/^Depends: $/d' | tee -a apt.postdependencies.${{matrix.os}}.list
-          echo "::endgroup::"
-          echo "::group:: Log Download Area"
-          for i in apt.postinstalled.raw.${{matrix.os}}.list apt.postdependencies.${{matrix.os}}.list; do
-            tar -I'zstd --ultra -22 -T2' -cf "${i}.tzst" "${i}" && rm "${i}"
-            curl -s --upload-file "${i}.tzst" https://transfer.sh/ && echo
-          done
-          echo "::endgroup::"
-      - name: Check Top 30 Storage-hungry APT Packages
-        run: |
-          echo "::group:: dpkg-query Debug Area"
-          dpkg-query -Wf '${Installed-Size}\t${Package}\n' | sort -rh 2>/dev/null | head -n30 | awk '{print $2}' >apt.hugeapps.names.${{matrix.os}}.list
-          cat apt.hugeapps.names.${{matrix.os}}.list | while read -r i; do
-            dpkg-query -f='Package: ${Package}\nSynopsis: ${binary:Summary}\nVersion: ${Version}\nISize: ${Installed-Size}\nPre-Depends: ${Pre-Depends}\nDepends: ${Depends}\n\n' -W "${i}" | sed -e '/^Synopsis: $/d;/^Version: $/d;/^ISize: $/d;/^Pre-Depends: $/d;/^Depends: $/d' | tee -a apt.hugeappsdependencies.${{matrix.os}}.list
-          done
-          echo "::endgroup::"
-          echo "::group:: Log Download Area"
-          tar -I'zstd --ultra -22 -T2' -cf "apt.hugeappsdependencies.${{matrix.os}}.list.tzst" "apt.hugeappsdependencies.${{matrix.os}}.list"
-          curl -s --upload-file "apt.hugeappsdependencies.${{matrix.os}}.list.tzst" https://transfer.sh/ && echo
-          echo "::endgroup::"
-      - name: Local & Global Bin checks
-        run: |
-          echo "::group:: Debug Area"
-          ls -lAog /usr/local/bin 2>&1 | tee -a bin.local.list
-          ls -lAog /usr/bin 2>&1 | tee -a bin.global.list
-          echo "::group:: Log Download Area"
-          tar -I'zstd --ultra -22 -T2' -cf bin.checklists.${{matrix.os}}.tzst bin.local.list bin.global.list
-          curl -s --upload-file bin.checklists.${{matrix.os}}.tzst https://transfer.sh/ && echo
-          echo "::endgroup::"
-      - name: Envirnment Variables Check
-        run: |
-          printenv | sort >envs.checklists.list
-          tar -I'zstd --ultra -22 -T2' -cf envs.checklists.${{matrix.os}}.tzst envs.checklists.list
-          curl -s --upload-file envs.checklists.${{matrix.os}}.tzst https://transfer.sh/ && echo
+          bash ./.github/checker.sh

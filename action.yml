@@ -1,12 +1,20 @@
-name: 'GitHub Actions Cleaner'
+name: 'GitHub Workflow Cleaner Action'
 author: 'Rokib Hasan Sagar'
-description: 'Clean GitHub Actions Environment For Lightweight Build Purpose'
+description: 'Clean GitHub Workflow Environment For Lightweight Build Purpose'
+inputs:
+  retain:
+    description: "Comma/Space-separated Values of Apps to Keep"
+    default: ""
+branding:
+  icon: 'layers'
+  color: 'green'
 runs:
   using: "composite"
   steps:
-    - run: $GITHUB_ACTION_PATH/cleanup.sh
-      name: 'Cleanup'
+    - name: 'Cleanup Operation'
       shell: bash
-branding:
-  icon: 'layers'
-  color: 'blue'
+      run: |
+        chmod a+x $GITHUB_ACTION_PATH/cleanup.sh
+        bash $GITHUB_ACTION_PATH/cleanup.sh
+      env:
+        retain: "${{ inputs.retain }}"
