@@ -16,6 +16,28 @@ fi
 # Make Sure The Environment Is Non-Interactive
 export DEBIAN_FRONTEND=noninteractive
 
+# Stick A Warning Message For Breaking Changes
+function _warningMsg() {
+cat <<EOBT
+
+  ╔══════════════════════════════════════════════════════════════╗
+  ║                                                              ║
+  ║             The Project Script Changed Recently,             ║
+  ║               There Are Many Breaking Changes.               ║
+  ║       ------------------------------------------------       ║
+  ║           Please Read The README.md File Properly.           ║
+  ║       ------------------------------------------------       ║
+  ║                 Visit Here & Read Carefully:                 ║
+  ║  https://github.com/rokibhasansagar/slimhub_actions/#readme  ║
+  ║                                                              ║
+  ╚══════════════════════════════════════════════════════════════╝
+
+EOBT
+}
+
+# Print the Warning Message
+printf "\e[33;1;2m" && _warningMsg && printf "\e[0m" && sleep 1s
+
 export AptPurgeList=" " DirPurgeList=" "
 
 # Make supported retainer list
