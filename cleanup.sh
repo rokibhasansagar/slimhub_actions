@@ -132,13 +132,13 @@ if [[ ${retain_docker_imgcache} != "true" ]]; then
   echo "::endgroup::"
 fi
 if [[ ${retain_docker_buildkit} != "true" ]]; then
-  export AptPurgeList+=" moby-buildx moby-cli moby-compose moby-containerd moby-engine moby-runc"
-  export DirPurgeList+=" /usr/bin/docker-credential-ecr-login /usr/local/bin/docker-compose /usr/bin/docker*"
+  export AptPurgeList+=" docker-buildx-plugin docker-ce-cli docker-ce containerd.io"
+  export DirPurgeList+=" /usr/bin/docker-credential-* /usr/local/bin/docker-compose /usr/bin/docker*"
 fi
 
 if [[ ${retain_container_tools} != "true" ]]; then
-  export AptPurgeList+=" podman buildah skopeo containers-common"
-  export DirPurgeList+=" $(parallel -j4 echo /usr/local/bin/{} ::: kind kubectl helm minikube kustomize)"
+  export AptPurgeList+=" podman buildah skopeo containers-common kubectl"   # FIXME: + open-vm-tools ?
+  export DirPurgeList+=" $(parallel -j4 echo /usr/local/bin/{} ::: kind helm minikube kustomize)"
   export DirPurgeList+=" /usr/local/bin/terraform"
 fi
 
@@ -196,8 +196,8 @@ if [[ ${retain_php} != "true" ]]; then
 fi
 
 if [[ ${retain_cloud_cli} != "true" ]]; then
-  export AptPurgeList+=" session-manager-plugin azure-cli google-cloud-sdk"
-  export DirPurgeList+=" /usr/local/bin/aliyun /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws /usr/local/aws-sam-cli /usr/local/bin/azcopy* /usr/share/az_* /opt/az /usr/bin/az /usr/share/google-cloud-sdk /usr/local/bin/bicep /usr/local/bin/oc /usr/local/bin/oras"
+  export AptPurgeList+=" session-manager-plugin azure-cli google-cloud-cli heroku"
+  export DirPurgeList+=" /usr/local/bin/aliyun /usr/local/bin/aws /usr/local/bin/aws_completer /usr/local/aws-cli /usr/local/aws /usr/local/aws-sam-cli /usr/local/bin/azcopy* /usr/share/az_* /opt/az /usr/bin/az /usr/share/google-cloud-sdk /usr/lib/google-cloud-sdk /usr/local/bin/bicep /usr/local/bin/oc /usr/local/bin/oras /usr/local/lib/heroku"   # FIXME: google-cloud-sdk, + cloud-init ?, + walinuxagent ?
 fi
 
 if [[ ${retain_vcs} != "true" ]]; then
@@ -350,7 +350,7 @@ if [[ "$(lsb_release -rs)" == "20.04" ]]; then
   export AptPurgeList+=" esl-erlang" DirPurgeList+=" /usr/local/bin/rebar3"
 fi
 export AptPurgeList+=" imagemagick imagemagick-6-common libgl1-mesa-dri firebird* hhvm "
-export DirPurgeList+=" /usr/share/firebird* /opt/hhvm /usr/share/sbt /usr/bin/sbt /usr/local/share/phantomjs* /usr/local/bin/phantomjs /usr/local/bin/packer /usr/local/lib/lein /usr/local/bin/lein /usr/local/bin/pulumi /usr/local/bin/pulumi-* /usr/share/miniconda /usr/bin/conda /usr/local/lib/heroku"
+export DirPurgeList+=" /usr/share/firebird* /opt/hhvm /usr/share/sbt /usr/bin/sbt /usr/local/share/phantomjs* /usr/local/bin/phantomjs /usr/local/bin/packer /usr/local/lib/lein /usr/local/bin/lein /usr/local/bin/pulumi /usr/local/bin/pulumi-* /usr/share/miniconda /usr/bin/conda"
 
 echo "::group:: {[-]}  Uninstalling and Purging apt Packages"
 
