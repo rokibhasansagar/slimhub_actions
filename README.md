@@ -234,11 +234,11 @@ You can use multiple program group names separated by comma in `retain` input ke
   - Virtual Framebuffer 'fake' X server
 </details>
 
-<h2>A Humble Pledge</h2>
+<h2>A Humble Plea</h2>
 
 <i>I worked tirelessly on finding which programs are installed how and/or where, and what are their purpose, what would happen if I remove them, how can I remove them, and such operations, with many trial-and-error method. It took countless hours to perfect the script to this level.</i>
 
-<i>So, I pledge to you beneficiaries that you show your appreciation to my work by giving the Project Repository a Star.</i>
+<i>So, I plead to you beneficiaries that you show your appreciation for my work by giving the Project Repository a Star.</i>
 
 <h2>Disclaimer</h2>
 
