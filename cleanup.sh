@@ -230,7 +230,7 @@ if [[ ${retain_ruby} != "true" ]]; then
 fi
 
 if [[ ${retain_nodejs_npm} != "true" ]]; then
-  curl -sL "https://github.com/actions/runner-images/raw/main/images/linux/toolsets/toolset-$(lsb_release -rs | sed 's/\.//g').json" >/tmp/toolset.json
+  curl -sL "https://github.com/actions/runner-images/raw/main/images/ubuntu/toolsets/toolset-$(lsb_release -rs | sed 's/\.//g').json" >/tmp/toolset.json
   sudo npm remove -g $(sed 's/^n$//g' <<<"$(jq -r ".node_modules[].name" /tmp/toolset.json)") &>/dev/null
   { yes | sudo n uninstall; } &>/dev/null
   export retain_toolcache_node="false"
