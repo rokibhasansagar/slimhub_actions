@@ -11,7 +11,7 @@ on:
     - 'cleanup.sh'
     - '.github/workflows/check_ubuntu.yml'
   schedule:
-    - cron: '1 1 1 * *'
+    - cron: '1 1 1,15 * *'
   workflow_dispatch:
 
 jobs:
@@ -21,10 +21,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-20.04, ubuntu-22.04, ubuntu-24.04]
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: 'main'
       - name: Raw Environment Checkup
